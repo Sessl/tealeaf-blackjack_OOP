@@ -9,7 +9,7 @@ end
 
 class Deck
   attr_accessor :deck
-  
+
   def initialise
     @deck = []
     ['Hearts', 'Spades', 'Clubs', 'Diamonds'].each do |suit|
@@ -57,7 +57,7 @@ module Hand
 
     face_values.each do |val|
       if val == "Ace"
-        sum2 += 1
+        sum1 += 1
       else
         sum1 += (val.to_i == 0 ? 10 : val.to_i)    
       end
