@@ -75,7 +75,7 @@ module Hand
   end
 
   def busted
-   total[0] > Blackjack::BLACKJACK_AMOUNT && total[1] > BLACKJACK_AMOUNT
+   total[0] > Blackjack::BLACKJACK_AMOUNT && total[1] > Blackjack::BLACKJACK_AMOUNT
   end
 end
 
