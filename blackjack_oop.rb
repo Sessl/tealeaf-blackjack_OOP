@@ -10,12 +10,12 @@ end
 class Deck
   attr_accessor :deck
 
-  def initialise
+  def initialize
     @deck = []
     ['Hearts', 'Spades', 'Clubs', 'Diamonds'].each do |suit|
       ['2', '3', '4', '5', '6', '7', '8', '9', '10','Ace', 'King', 'Queen', 'Jack'].each do |value|
         @deck << Card.new(suit, value)
-        puts "Test"
+        #puts "Test"
       end
     end
     scramble!
@@ -38,19 +38,19 @@ module Hand
   def show_hand
     puts "------#{name}'s Hand ------"
     cards.each do|card|
-      puts "=> #{card}"
+      puts "=> #{card.value}  of #{card.suit}"
     end
 
     if total[1] != 0
       puts "=> Your two totals are: #{total[0]} and #{total[1]}"
     else
       puts "=> Your total is: #{total[0]}"
-      player.best_total = total[0]
+    #  best_total = total[0]
     end
   end
 
   def total
-    face_values = cards.map{|card| card.face_value}
+    face_values = cards.map{|card| card.value}
 
     sum1 = 0
     sum2 = 0
@@ -74,8 +74,8 @@ module Hand
     cards << new_card
   end
 
-  def busted
-   total[0] > Blackjack::BLACKJACK_AMOUNT && total[1] > Blackjack::BLACKJACK_AMOUNT
+  def is_busted?
+   (total[0] > Blackjack::BLACKJACK_AMOUNT) && (total[1] > Blackjack::BLACKJACK_AMOUNT)
   end
 end
 
@@ -109,7 +109,7 @@ class Dealer
   def show_flop
     puts "----Dealer's Hand ------"
     puts "=> First card is hidden"
-    puts "=> Second card is #{cards[1]}"
+    puts "=> Second card is #{cards[1].value} of #{cards[1].suit}"
   end
 
 end
@@ -125,6 +125,7 @@ class Blackjack
     @player = Player.new("Player1")
     @dealer = Dealer.new
     @gdeck = Deck.new
+    set_player_name
   end
 
   def set_player_name
@@ -148,9 +149,9 @@ class Blackjack
   end
   
   def blackjack_or_bust?(player_or_dealer)
-    if player_or_dealer.total[0] == BLACKJACK_AMOUNT || player_or_dealer.total[1] == BLACKJACK_AMOUNT
+    if (player_or_dealer.total[0] == BLACKJACK_AMOUNT) || (player_or_dealer.total[1] == BLACKJACK_AMOUNT)
       if player_or_dealer.is_a?(Dealer)
-        puts "Sorry, dealer hit blackjack. #{player_name} loses."
+        puts "Sorry, dealer hit blackjack. #{player.name} loses."
       else
         puts "Congratulations, you hit blackjack! #{player.name} wins!"
       end
@@ -174,13 +175,25 @@ class Blackjack
 
   def player_goes
     blackjack_or_bust?(player)
-    say
-    while say == 'hit'
+
+    if player.total[1] != 0
+        if (player.total[0] < player.total[1]) && (player.total[1] < 21)
+          player.best_total = player.total[1]
+        else
+          player.best_total = player.total[0]
+        end
+    else
+      player.best_total = player.total[0]
+
+    end
+    
+    while say == "hit"
       new_card = gdeck.deal_one
-      puts "Dealing card to #{player.name}: #{new_card}"
+      puts "Dealing card to #{player.name}: #{new_card.value} of #{new_card.suit}"
       player.add_card(new_card)
       if player.total[1] != 0
         puts "=> Your two totals are: #{player.total[0]} and #{player.total[1]}"
+        blackjack_or_bust?(player)
         if (player.total[0] < player.total[1]) && (player.total[1] < 21)
           player.best_total = player.total[1]
         else
@@ -188,11 +201,12 @@ class Blackjack
         end
       else
         puts "=> Your total is: #{player.total[0]}"
+        blackjack_or_bust?(player)
         player.best_total = player.total[0]
       end
-      blackjack_or_bust?(player)
-      say
+     # blackjack_or_bust?(player)
     end
+    
     
     puts "#{player.name} stays at #{player.best_total}."
 
@@ -201,33 +215,35 @@ class Blackjack
   def dealer_goes
     blackjack_or_bust?(dealer)
     if dealer.total[1] != 0
-        puts "=> House totals are: #{dealer.total[0]} and #{dealer.total[1]}"
+        puts "=> Dealer totals are: #{dealer.total[0]} and #{dealer.total[1]}"
         if (dealer.total[1] < 21)
           dealer.best_total = dealer.total[1]
         else
           dealer.best_total = dealer.total[0]
         end 
       else
-        puts "=> House total is: #{dealer.total[0]}"
+        puts "=> Dealer's total is: #{dealer.total[0]}"
         dealer.best_total = dealer.total[0]
       end
     
     while dealer.best_total < DEALER_HIT_MIN
       new_card = gdeck.deal_one
-      puts "Dealing car to dealer: #{new_card}"
+      puts "Dealing card to dealer: #{new_card.value} of #{new_card.suit}"
       dealer.add_card(new_card)
       if dealer.total[1] != 0
-        puts "=> House totals are: #{dealer.total[0]} and #{dealer.total[1]}"
+        puts "=> Dealer's totals are: #{dealer.total[0]} and #{dealer.total[1]}"
+        blackjack_or_bust?(dealer)
         if (dealer.total[1] < 21)
           dealer.best_total = dealer.total[1]
         else
           dealer.best_total = dealer.total[0]
         end 
       else
-        puts "=> House total is: #{dealer.total[0]}"
+        puts "=> Dealer's total is: #{dealer.total[0]}"
+        blackjack_or_bust?(dealer)
         dealer.best_total = dealer.total[0]
       end
-      blackjack_or_bust?(dealer)
+    #  blackjack_or_bust?(dealer)
 
     end 
 
@@ -248,14 +264,14 @@ class Blackjack
   end
   
   def play_again?
-    puts "#{name} would you like to play again? "
+    puts "#{player.name} would you like to play again? "
     if gets.chomp.downcase == 'yes'
       puts "Starting new game"
       puts " "
       gdeck = Deck.new
       player.cards = []
       dealer.cards = []
-      start
+      run
     else
       puts "Goodbye"
       exit
@@ -263,12 +279,12 @@ class Blackjack
   end
 
   def run
-    set_player_name
     deal_cards
     show_flop
     player_goes
     dealer_goes
     who_won?
+    play_again?
   end
 end
 
