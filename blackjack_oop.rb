@@ -278,7 +278,7 @@ class Blackjack
       dealer.cards = []
       run
     else
-      puts "Goodbye"
+      puts "Aloha"
       exit
     end
   end
