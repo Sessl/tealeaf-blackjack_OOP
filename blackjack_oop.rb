@@ -15,7 +15,6 @@ class Deck
     ['Hearts', 'Spades', 'Clubs', 'Diamonds'].each do |suit|
       ['2', '3', '4', '5', '6', '7', '8', '9', '10','Ace', 'King', 'Queen', 'Jack'].each do |value|
         @deck << Card.new(suit, value)
-        #puts "Test"
       end
     end
     scramble!
@@ -75,7 +74,8 @@ module Hand
   end
 
   def is_busted?
-   (total[0] > Blackjack::BLACKJACK_AMOUNT) && (total[1] > Blackjack::BLACKJACK_AMOUNT)
+  # (total[0] > Blackjack::BLACKJACK_AMOUNT) && (total[1] > Blackjack::BLACKJACK_AMOUNT)
+   best_total > Blackjack::BLACKJACK_AMOUNT
   end
 end
 
@@ -151,9 +151,9 @@ class Blackjack
   def blackjack_or_bust?(player_or_dealer)
     if (player_or_dealer.total[0] == BLACKJACK_AMOUNT) || (player_or_dealer.total[1] == BLACKJACK_AMOUNT)
       if player_or_dealer.is_a?(Dealer)
-        puts "Sorry, dealer hit blackjack. #{player.name} loses."
+        puts "Sorry, dealer hit Blackjack! #{player.name} loses."
       else
-        puts "Congratulations, you hit blackjack! #{player.name} wins!"
+        puts "Congratulations, you hit Blackjack! #{player.name} wins!"
       end
       play_again?
     elsif player_or_dealer.is_busted?
@@ -174,7 +174,7 @@ class Blackjack
   end
 
   def player_goes
-    blackjack_or_bust?(player)
+   
 
     if player.total[1] != 0
         if (player.total[0] < player.total[1]) && (player.total[1] < 21)
@@ -186,14 +186,17 @@ class Blackjack
       player.best_total = player.total[0]
 
     end
+
+    blackjack_or_bust?(player)
     
     while say == "hit"
       new_card = gdeck.deal_one
       puts "Dealing card to #{player.name}: #{new_card.value} of #{new_card.suit}"
       player.add_card(new_card)
+    
       if player.total[1] != 0
         puts "=> Your two totals are: #{player.total[0]} and #{player.total[1]}"
-        blackjack_or_bust?(player)
+       
         if (player.total[0] < player.total[1]) && (player.total[1] < 21)
           player.best_total = player.total[1]
         else
@@ -201,10 +204,10 @@ class Blackjack
         end
       else
         puts "=> Your total is: #{player.total[0]}"
-        blackjack_or_bust?(player)
+     
         player.best_total = player.total[0]
       end
-     # blackjack_or_bust?(player)
+      blackjack_or_bust?(player)
     end
     
     
@@ -213,38 +216,39 @@ class Blackjack
   end
 
   def dealer_goes
-    blackjack_or_bust?(dealer)
+  
     if dealer.total[1] != 0
         puts "=> Dealer totals are: #{dealer.total[0]} and #{dealer.total[1]}"
-        if (dealer.total[1] < 21)
+        if (dealer.total[1] < BLACKJACK_AMOUNT)
           dealer.best_total = dealer.total[1]
         else
           dealer.best_total = dealer.total[0]
         end 
-      else
+    else
         puts "=> Dealer's total is: #{dealer.total[0]}"
         dealer.best_total = dealer.total[0]
-      end
-    
+    end
+
+    blackjack_or_bust?(dealer)
+
     while dealer.best_total < DEALER_HIT_MIN
       new_card = gdeck.deal_one
       puts "Dealing card to dealer: #{new_card.value} of #{new_card.suit}"
       dealer.add_card(new_card)
       if dealer.total[1] != 0
         puts "=> Dealer's totals are: #{dealer.total[0]} and #{dealer.total[1]}"
-        blackjack_or_bust?(dealer)
-        if (dealer.total[1] < 21)
+       
+        if (dealer.total[1] < BLACKJACK_AMOUNT)
           dealer.best_total = dealer.total[1]
         else
           dealer.best_total = dealer.total[0]
         end 
       else
         puts "=> Dealer's total is: #{dealer.total[0]}"
-        blackjack_or_bust?(dealer)
+      
         dealer.best_total = dealer.total[0]
       end
-    #  blackjack_or_bust?(dealer)
-
+      blackjack_or_bust?(dealer)
     end 
 
     puts "Dealer stays at #{dealer.best_total}"
@@ -254,11 +258,12 @@ class Blackjack
   def who_won?
     if dealer.best_total == player.best_total
       puts "It's a push"
-    elsif dealer.best_total > 21
-      puts "#{player.name} wins!"
+  #  elsif dealer.best_total > 21
+    #  puts "#{player.name} wins!"
     elsif dealer.best_total < player.best_total
       puts "#{player.name} wins!"
-    elsif (dealer.best_total <= 21) && (dealer.best_total > player.best_total)
+    #elsif (dealer.best_total <= 21) && (dealer.best_total > player.best_total)
+    elsif dealer.best_total > player.best_total
       puts 'House wins'
     end
   end
